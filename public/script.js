@@ -2,10 +2,10 @@ const socket = io('/');
 const videoGrid = document.getElementById('video-grid');
 
 var peer = new Peer(undefined, {
-    path: '/peerjs', 
+    path: '/peerjs',
     host: '/',
     port: '3030'
-}); 
+});
 
 
 let myVideoStream;
@@ -30,6 +30,21 @@ navigator.mediaDevices.getUserMedia({
     socket.on('user-connected', userId => {
         connecToNewUser(userId, stream);
     })
+
+    let text = $('input')
+
+    $('html').keydown((e) => {
+        if (e.which == 13 && text.val().length !== 0) {
+            console.log(text.val())
+            socket.emit('message', text.val());
+            text.val('')
+        }
+    });
+
+    socket.on('createMessage', message => {
+        $('.messages').append(`<li class="message"><b>Anonymous</b><br/>${message}</li>`)
+        scrollToBottom();
+    })
 })
 peer.on('open', id => {
     socket.emit('join-room', ROOM_ID, id);
@@ -50,3 +65,20 @@ const addVideoStream = (video, stream) => {
     })
     videoGrid.append(video);
 }
+
+const scrollToBottom = () => {
+    var d = $('.main__chat_window');
+    d.scrollTop(d.prop("scrollHeight"));
+}
+
+
+const muteUnmute = () => {
+    const enabled = myVideoStream.getAudioTracks()[0].enabled;
+    if (enabled) {
+      myVideoStream.getAudioTracks()[0].enabled = false;
+      setUnmuteButton();
+    } else {
+      setMuteButton();
+      myVideoStream.getAudioTracks()[0].enabled = true;
+    }
+  }
